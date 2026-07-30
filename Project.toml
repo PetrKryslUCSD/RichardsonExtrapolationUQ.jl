@@ -1,0 +1,4 @@
+name = "RichardsonExtrapolationUQ"
+uuid = "4e46a7e1-8e58-4e9b-8480-33443757f467"
+version = "0.1.0"
+authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
