@@ -22,3 +22,8 @@ e = RichardsonExtrapolationUQ.richextrapol_uq(r, h; W = 2/3)
 @test e.success == false
 
 
+(r, h) = ([1.8840249769663129, 0.9545349574395816, 0.4798808596292822, 0.24037850750484296], [0.0078125, 0.00390625, 0.001953125, 0.0009765625])
+e = RichardsonExtrapolationUQ.richextrapol_uq(r, h; W = 2/3)
+@test e.success == true
+@test e.q_star == -0.004941742891815468
+@test e.q_star_ci == 0.008827065399897874
