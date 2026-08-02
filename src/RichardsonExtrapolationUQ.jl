@@ -19,33 +19,35 @@ function richextrapol_uq(solutions, elementsizes; W = 2/3)
     # Four possible combinations of results
     c = [[1, 2, 3], [1, 3, 4], [1, 2, 4], [2, 3, 4]]
 
+    # If we have more results than four, we can use a sliding window 
+    # of four results to compute the extrapolation repeatedly.
     results = []
-    for j in 1:length(solutions)-3
-        ess = elementsizes[j:j+3]
-        qs = solutions[j:j+3]
+    for i in 1:length(solutions)-3
+        ess = elementsizes[i:i+3]
+        qs = solutions[i:i+3]
 
-        extrapolations = []
+        edat = []
         for j in eachindex(c)
-            e = (Inf * sign(qs[end]), 0.0, 0.0, Inf)
+            e = (NaN, NaN, NaN, NaN, "")
             try
                 e = richextrapol(qs[c[j]], ess[c[j]])
                 if e[4] > minimum(abs.(solutions)) / 1.0e-6
-                    error("Richardson extrapolation failed: large residual ($e[4])")
+                    e = (NaN, NaN, NaN, NaN, "Richardson extrapolation failed: large residual ($e[4])")
                 end 
             catch
             end
             # println("extrapolation $(qs[c[j]]) $(e[1])")
             # println("convergence rate $(e[2])")
-            push!(extrapolations, (solnestim = e[1], beta = e[2], c = e[3], maxresidual = e[4]))
+            push!(edat, (solnestim = e[1], beta = e[2], c = e[3], maxresidual = e[4], err = e[5], data = (qs[c[j]], ess[c[j]])))
         end
-        extrsols = [e.solnestim for e in extrapolations]
+        extrsols = [e.solnestim for e in edat]
         q_m = median(extrsols)
-        q_m_ad = 1.4826 * median(abs.(extrsols .- q_m))
-        q_star = W * extrapolations[end].solnestim + (1 - W) * q_m
-        beta_m = median([e.beta for e in extrapolations])
-        beta_m_ad = median(abs.([e.beta for e in extrapolations] .- beta_m))
-        beta_star = W * extrapolations[end].beta + (1 - W) * beta_m
-        push!(results, (estim = q_star, estim_ad_x_2 = 2*q_m_ad, beta = beta_star, beta_ad_x_2 = 2*beta_m_ad, elementsize = ess[end-1], extrapolations = extrapolations)) 
+        q_mad = 1.4826 * median(abs.(extrsols .- q_m))
+        q_star = W * edat[end].solnestim + (1 - W) * q_m
+        beta_m = median([e.beta for e in edat])
+        beta_mad = median(abs.([e.beta for e in edat] .- beta_m))
+        beta_star = W * edat[end].beta + (1 - W) * beta_m
+        push!(results, (q_star = q_star, q_star_ci = 2*q_mad, beta_star = beta_star, beta_star_ci = 2*beta_mad, elementsize = ess[end-1], edat = edat)) 
     end 
     return results
 end 
